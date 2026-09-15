@@ -1,0 +1,12 @@
+[Unit]
+Description=Schedule iSpindel heartbeat evidence
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+RandomizedDelaySec=30s
+Persistent=true
+Unit=ispindel-heartbeat.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,59 @@
+{
+	admin off
+	auto_https disable_redirects
+}
+
+(redacted_access_log) {
+	log {
+		output stdout
+		format filter {
+			wrap json
+			fields {
+				request>uri delete
+				request>headers>Authorization delete
+				request>headers>Cookie delete
+			}
+		}
+	}
+}
+
+(canonical_proxy) {
+	reverse_proxy 127.0.0.1:18098 {
+		header_up -X-Forwarded-For
+		header_up -X-Forwarded-Host
+		header_up -X-Forwarded-Proto
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Host {host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}
+
+http://{$ISPINDEL_LAN_IP}:8098 {
+	bind {$ISPINDEL_LAN_IP}
+	import redacted_access_log
+
+	@stock_ingest {
+		method POST
+		path /api/ingest
+	}
+	handle @stock_ingest {
+		request_body {
+			max_size 64KB
+		}
+		import canonical_proxy
+	}
+	handle {
+		respond 404
+	}
+}
+
+https://{$TAILNET_FQDN} {
+	bind {$ISPINDEL_TAILNET_IP}
+	tls internal
+	import redacted_access_log
+
+	basic_auth {
+		{$ISPINDEL_ADMIN_USER} {$ISPINDEL_ADMIN_PASSWORD_HASH}
+	}
+	import canonical_proxy
+}

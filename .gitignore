@@ -1,0 +1,73 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+playwright-report/
+test-results/
+.hermes/
+*.db
+*.db-wal
+*.db-shm
+backups/
+.env
+.env.*
+# Generic nested runtime environment files (broad ignore; example negations below stay explicit)
+*.env
+!.env.example
+!phone.env.example
+!compose.env.example
+secrets/
+wheelhouse/
+dist/
+release-staging/
+
+# Private keys, certificates, and PKCS bundles
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Phone stack secret (keep phone.env.example tracked explicitly above)
+phone.env
+
+# Scoped local environment overrides (broader *.env above already covers .env;
+# this catches vendor-style `*.local.env` files that should never be tracked).
+*.local.env
+
+# Local databases (sqlite variants beyond the broad *.db above)
+*.sqlite
+*.sqlite3
+
+# Backup and partial-payload artifacts
+*.bak
+*.partial
+
+# Activation receipts and deployment state (broad ignore must not hide source)
+**/activation*.json
+**/receipts/
+**/receipts/**
+
+# Root-level activation receipt filename (exact match; defensive alongside **/activation*.json)
+activation.json
+
+# Backup command stdout/stderr capture files
+backup-command-output.json
+
+# Local runtime/state and logs
+logs/
+*.log
+**/local-state/
+**/local-state/**
+
+# Scoped local state directory (per-repo `.local/state/` cache)
+.local/state/
+
+# Release archives (release-staging/ already excluded above)
+*.tar.zst
+*.tar.gz
+*.tgz

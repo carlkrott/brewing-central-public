@@ -1,0 +1,12 @@
+[Unit]
+Description=Monthly disposable iSpindel restore rehearsal
+
+[Timer]
+OnCalendar=monthly
+RandomizedDelaySec=6h
+Persistent=false
+AccuracySec=1h
+Unit=ispindel-restore-drill.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://amp-spot.local/schemas/ispindel-release-manifest-v1.json",
+  "title": "iSpindel immutable offline release manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "release_id", "created_at", "release_root", "source",
+    "phase7b", "image", "caddy", "tests", "artifact_count", "artifacts"
+  ],
+  "properties": {
+    "schema": {"const": "ispindel-release-manifest/v1"},
+    "release_id": {"type": "string", "pattern": "^[0-9]{8}T[0-9]{6}Z-[0-9a-f]{12}$"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "release_root": {"type": "string", "pattern": "^dist/releases/[0-9]{8}T[0-9]{6}Z-[0-9a-f]{12}/payload$"},
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["commit", "short_commit", "dockerfile_sha256", "compose_sha256", "caddyfile_sha256", "systemd_tree_sha256", "scripts_tree_sha256", "wheelhouse_authority_sha256", "static_assets"],
+      "properties": {
+        "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "short_commit": {"type": "string", "pattern": "^[0-9a-f]{12}$"},
+        "dockerfile_sha256": {"$ref": "#/$defs/sha256"},
+        "compose_sha256": {"$ref": "#/$defs/sha256"},
+        "caddyfile_sha256": {"$ref": "#/$defs/sha256"},
+        "systemd_tree_sha256": {"$ref": "#/$defs/sha256"},
+        "scripts_tree_sha256": {"$ref": "#/$defs/sha256"},
+        "wheelhouse_authority_sha256": {"$ref": "#/$defs/sha256"},
+        "static_assets": {"type": "object", "additionalProperties": {"$ref": "#/$defs/sha256"}}
+      }
+    },
+    "phase7b": {
+      "type": "object", "additionalProperties": false,
+      "required": ["descriptor_path", "descriptor_sha256", "authority_path", "authority_sha256", "verdict"],
+      "properties": {
+        "descriptor_path": {"const": "source/descriptors/phase7b-authority.json"},
+        "descriptor_sha256": {"$ref": "#/$defs/sha256"},
+        "authority_path": {"const": "authority/PHASE7B-REPAIR-AUTHORITY.json"},
+        "authority_sha256": {"$ref": "#/$defs/sha256"},
+        "verdict": {"const": "GO"}
+      }
+    },
+    "image": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "reference", "archive_path", "archive_sha256", "archive_size", "config_sha256", "rootfs_sha256", "architecture", "os"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "reference": {"type": "string", "pattern": "^ispindel-release:[0-9]{8}T[0-9]{6}Z-[0-9a-f]{12}$"},
+        "archive_path": {"type": "string", "pattern": "^images/ispindel-[0-9]{8}T[0-9]{6}Z-[0-9a-f]{12}\\.docker\\.tar\\.gz$"},
+        "archive_sha256": {"$ref": "#/$defs/sha256"},
+        "archive_size": {"type": "integer", "minimum": 1},
+        "config_sha256": {"$ref": "#/$defs/sha256"},
+        "rootfs_sha256": {"$ref": "#/$defs/sha256"},
+        "architecture": {"type": "string", "minLength": 1},
+        "os": {"type": "string", "minLength": 1}
+      }
+    },
+    "caddy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "archive_path", "archive_sha256", "archive_sha512", "binary_sha256", "sbom_path", "sbom_sha256", "checksum_path"],
+      "properties": {
+        "version": {"const": "v2.11.4"},
+        "archive_path": {"const": "caddy/caddy_2.11.4_linux_amd64.tar.gz"},
+        "archive_sha256": {"$ref": "#/$defs/sha256"},
+        "archive_sha512": {"$ref": "#/$defs/sha512"},
+        "binary_sha256": {"$ref": "#/$defs/sha256"},
+        "sbom_path": {"const": "caddy/modules.sbom.txt"},
+        "sbom_sha256": {"$ref": "#/$defs/sha256"},
+        "checksum_path": {"const": "caddy/caddy_2.11.4_linux_amd64.tar.gz.sha512"}
+      }
+    },
+    "tests": {
+      "type": "object", "additionalProperties": false,
+      "required": ["result", "commands", "log_path", "log_sha256"],
+      "properties": {
+        "result": {"const": "PASS"},
+        "commands": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "log_path": {"const": "evidence/release-tests.log"},
+        "log_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "artifact_count": {"type": "integer", "minimum": 1},
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["path", "size", "mode", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "size": {"type": "integer", "minimum": 0},
+          "mode": {"type": "integer", "enum": [420, 493]},
+          "sha256": {"$ref": "#/$defs/sha256"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "sha512": {"type": "string", "pattern": "^[0-9a-f]{128}$"}
+  }
+}

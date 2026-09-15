@@ -1,0 +1,13 @@
+[Unit]
+Description=Run verified iSpindel backup every six hours
+
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=6h
+RandomizedDelaySec=15min
+Persistent=true
+AccuracySec=1min
+Unit=ispindel-backup.service
+
+[Install]
+WantedBy=timers.target

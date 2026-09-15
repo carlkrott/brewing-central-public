@@ -1,0 +1,14 @@
+{
+  "schema_version": "ingest-tokens-v1",
+  "devices": {
+    "EXAMPLE-DEVICE-ID": {
+      "verifiers": [
+        {
+          "salt_hex": "42424242424242424242424242424242",
+          "verifier_hex": "03dd0ea3d6c8dd0d28b59fc2168f7b305b4a22ea2916419ed5a72ea9f15b30f6",
+          "not_after": null
+        }
+      ]
+    }
+  }
+}

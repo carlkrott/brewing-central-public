@@ -1,0 +1,60 @@
+.git
+.venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+htmlcov
+.env
+.env.*
+!.env.example
+secrets
+*.db
+*.db-wal
+*.db-shm
+backups
+dist
+release-staging
+playwright-report
+test-results
+tests
+docs
+descriptors
+.github
+ops
+scripts
+
+# Hermes internal state (planning, research, scratchpads)
+.hermes/
+
+# Local mutable data and runtime state
+data/
+logs/
+*.log
+**/activation*.json
+**/receipts/
+**/local-state/
+
+# Scoped local cache directory (per-repo .local/ — Hermes scratch, plan state)
+.local/
+
+# Release archives and compressed payloads
+*.tar.zst
+*.tar.gz
+*.tar
+*.tgz
+*.zip
+*.partial
+
+# Default-deny closure: only the four Dockerfile COPY sources stay in context.
+# Negations re-include exactly requirements.txt, requirements.lock, wheels/, app/.
+# Dockerfile and .dockerignore are implicitly available to Docker and need no negation.
+*
+!requirements.txt
+!requirements.lock
+!wheels/
+!wheels/**
+!app/
+!app/**

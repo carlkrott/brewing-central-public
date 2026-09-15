@@ -1,0 +1,19 @@
+[Unit]
+Description=Reconcile the permanent iSpindel Compose stack at boot
+Wants=network-online.target tailscaled.service docker.service
+After=network-online.target tailscaled.service docker.service ispindel-secrets-verify.service
+Requires=docker.service ispindel-secrets-verify.service
+StartLimitIntervalSec=5min
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/ispindel-dashboard
+EnvironmentFile=/etc/ispindel/production.env
+ExecStartPre=/usr/bin/python3 /usr/local/libexec/ispindel/verify-production-secrets.py
+ExecStart=/usr/bin/python3 /usr/local/libexec/ispindel/stack-start.py
+TimeoutStartSec=4min
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

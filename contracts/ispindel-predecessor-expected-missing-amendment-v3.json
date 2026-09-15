@@ -1,0 +1,44 @@
+{
+  "activation": {
+    "allow_flag": "--allow-expected-missing",
+    "version_flag": "--expected-missing-contract-version"
+  },
+  "contract_sha256": "282eab89407ae44410d5a3b5cca8f9c0eee7f1fc3073456c33a989a21b50736b",
+  "contract_version": "ispindel-predecessor-expected-missing/2026-08-06-v3",
+  "expected_missing_paths": [],
+  "predecessor_descriptor": {
+    "path": "source/descriptors/predecessor-production.json",
+    "sha256": "4c9935b61c36437e2e8b0fad37d9794d12cd2984c845ceb94028cb54752f1202"
+  },
+  "prohibitions": [
+    "Do not reconstruct, install, or describe inferred override bytes as recovered predecessor bytes.",
+    "Do not widen expected-missing authority beyond the exact null-valued predecessor host inputs; an empty set is valid when all labelled files are present."
+  ],
+  "rollback_policy": {
+    "compose_inputs": "snapshot-proven-present-only",
+    "database_restore": false,
+    "exact_predecessor_image_required": true,
+    "no_build": true,
+    "pull": "never",
+    "restore_complete_snapshot": true
+  },
+  "schema": "ispindel-predecessor-expected-missing-amendment/v2",
+  "self_excluding_digest_construction": {
+    "algorithm": "sha256",
+    "canonical_json": "UTF-8 json.dumps(value_without_contract_sha256, sort_keys=True, separators=(',', ':'), ensure_ascii=False)",
+    "omit_exact_key": "contract_sha256",
+    "python_reference": "hashlib.sha256(json.dumps({k:v for k,v in value.items() if k != 'contract_sha256'}, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode('utf-8')).hexdigest()"
+  },
+  "snapshot_policy": {
+    "complete_labelled_inventory_required": true,
+    "expected_missing_row": {
+      "present": false
+    },
+    "unexpected_absence": "hard-fail",
+    "unexpected_presence": "hard-fail"
+  },
+  "source_release": {
+    "manifest_sha256": "9c6bdcb8c6871822b6da4587caffa6581f4b8567999320218fd3253366d35ea0",
+    "release_id": "20260805T073921Z-404e709c235f"
+  }
+}

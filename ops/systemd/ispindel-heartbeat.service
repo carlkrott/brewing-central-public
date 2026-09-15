@@ -1,0 +1,15 @@
+[Unit]
+Description=Write canonical iSpindel heartbeat evidence
+After=ispindel-poll.service ispindel-stack.service
+Requires=ispindel-stack.service
+
+[Service]
+Type=oneshot
+User=root
+Group=ispindel
+ExecStart=/usr/bin/python3 /opt/ispindel-dashboard/scripts/write-heartbeat.py --poll-state /var/lib/ispindel/evidence/poll-state.json --output /var/lib/ispindel/evidence/heartbeat.json
+PrivateTmp=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/ispindel/evidence

@@ -1,0 +1,13 @@
+[Unit]
+Description=Run fleet-side phone-aware iSpindel backup every six hours
+
+[Timer]
+OnBootSec=20min
+OnUnitActiveSec=6h
+RandomizedDelaySec=15min
+Persistent=true
+AccuracySec=1min
+Unit=ispindel-phone-backup.service
+
+[Install]
+WantedBy=timers.target

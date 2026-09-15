@@ -1,0 +1,28 @@
+[Unit]
+Description=Verified online iSpindel backup and off-host promotion
+After=docker.service network-online.target tailscaled.service ispindel-stack.service
+Wants=network-online.target tailscaled.service
+Requires=docker.service
+Requires=ispindel-stack.service
+
+[Service]
+Type=oneshot
+User=ispindel
+Group=ispindel
+EnvironmentFile=/etc/ispindel/backup.env
+Environment=DOCKER_HOST=unix:///var/run/docker.sock
+ExecStart=/usr/bin/python3 /usr/local/libexec/ispindel/backup-production.py --production --include-brew --execute
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+ReadWritePaths=/var/backups/ispindel-dashboard
+TimeoutStartSec=30min
+StandardOutput=journal
+StandardError=journal

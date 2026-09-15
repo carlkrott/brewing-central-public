@@ -1,0 +1,136 @@
+{
+  "files": {
+    "Dockerfile": {
+      "sha256": "498bba92ab44c0241da6eb94d0a78de4bad28639f1504c195329ee9f12a0ee8b",
+      "size": 921
+    },
+    "app/main.py": {
+      "sha256": "d4e38fa2cfb8c0c9806c43d9ebc1fb7574773680ded52f7331ee96fa5d6ad105",
+      "size": 90864
+    },
+    "app/static/assets-manifest.json": {
+      "sha256": "cfc2f14a831edc4adc0c2446b09919c14929387e6d5ed33683b2c3c47999d7dc",
+      "size": 3188
+    },
+    "app/static/chart.umd.js": {
+      "sha256": "ecc3cd1eeb8c34d2178e3f59fd63ec5a3d84358c11730af0b9958dc886d7652a",
+      "size": 208518
+    },
+    "app/static/chartjs-adapter-date-fns.bundle.min.js": {
+      "sha256": "ea7ab30d26c38dcf1f2d26bb43e73a94537b58f1906f55e1a546dd09321b5615",
+      "size": 50650
+    },
+    "app/static/dashboard.css": {
+      "sha256": "cf41c5e7903b099c1f11c9c99eb9027fe27fae8a362b0cd97a15767815703479",
+      "size": 9837
+    },
+    "app/static/dashboard.js": {
+      "sha256": "d0fd05af09d4f73703f60589581b5382d8c5afab311f62ec53e176509dc89e94",
+      "size": 44606
+    },
+    "app/static/licenses/chartjs-LICENSE.md": {
+      "sha256": "41a84aa2caba645f966a18d9c2056b73e6d3a81d80bc0046bc0011a2634d4cce",
+      "size": 1093
+    },
+    "app/static/licenses/chartjs-adapter-date-fns-LICENSE.md": {
+      "sha256": "b4b8355c2cd2b18354980a0c6422181d7bd6e895d94ae88b3570e97c60eea03d",
+      "size": 1088
+    },
+    "app/static/licenses/date-fns-LICENSE.md": {
+      "sha256": "8d3951c38967b964b1fe259bfd200c2647cc04c858b55a4414e3122a60f1ef4b",
+      "size": 1117
+    },
+    "docker-compose.yml": {
+      "sha256": "24093c201ec5fab7285a5738ee9a900317fc864a257f75b97b7a42c4da8dca5a",
+      "size": 931
+    },
+    "phase3_research.md": {
+      "sha256": "ad2e198d4f2337cc0f59872415567db0a6cd1c3d027cc1a765931cdb9fa65ffc",
+      "size": 5659
+    },
+    "report.md": {
+      "sha256": "e2f5e7ec16146acb4444b74165c566f125f55ab153c79a974a456307236ab98b",
+      "size": 10910
+    },
+    "requirements-test.in": {
+      "sha256": "4635591a6da60e2059a46fe0f0075d76a23af81abf3bc88a0857ead4bfb8c54d",
+      "size": 200
+    },
+    "requirements-test.lock": {
+      "sha256": "b7d3b8127d699a3a2133d7a930f2e4cc2cf78960f8a59aad2d8c3ca0ec0b57d6",
+      "size": 1498
+    },
+    "requirements.txt": {
+      "sha256": "65960faadd6b7ada8d55b52db4151ca791816667ab99c26fee2efa5cf3663b3b",
+      "size": 60
+    },
+    "scripts/ispindel-check.py": {
+      "sha256": "70b6bd2f0653c30dd634a2f7eeddb7b84238a23f4207b70825a0f2a6f84ff9a8",
+      "size": 3254
+    },
+    "tests/__init__.py": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "tests/browser/__init__.py": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "tests/browser/test_dashboard.py": {
+      "sha256": "8045c2ae0db400f9475d2b3c36f5fe84a027d959292247521fda1cad0a1db3cf",
+      "size": 50605
+    },
+    "tests/conftest.py": {
+      "sha256": "e456eb90ddefd9f1f2c310b0f6c53705ff5c4798ae42d0088cd798c12f7d417c",
+      "size": 6912
+    },
+    "tests/test_assets.py": {
+      "sha256": "fb63d60b912109d46475e595452f871c960c657549e789a5a510b64f0a192a89",
+      "size": 7939
+    },
+    "tests/test_calibration.py": {
+      "sha256": "3d1c0acf59ead0416e61e5d648417461ce5b98556ef51c715dfe50009a975798",
+      "size": 17500
+    },
+    "tests/test_concurrency.py": {
+      "sha256": "1c2b627a8e69b355c410842981a38eda5deac086a18b6a363e02a8c19950fdae",
+      "size": 7403
+    },
+    "tests/test_database.py": {
+      "sha256": "06ab85d89cec8dc69ed7fb1462631699888754bc48399521a3108c2b918aa2f3",
+      "size": 10018
+    },
+    "tests/test_docker_runtime.py": {
+      "sha256": "4bb36a32e23815636478c10fc56831f211899c16abfe762e0d961233aefac5f1",
+      "size": 9757
+    },
+    "tests/test_ingest.py": {
+      "sha256": "2a160c21296300d4e03a9eced35c6596d6b1b2719dbfe0ccb18598d573ce0883",
+      "size": 16906
+    },
+    "tests/test_migrations.py": {
+      "sha256": "fa1c2fc04179ebc3e5e1b586d6e4b6b83fd6ab04546ae0b5b381bc2517eb28ad",
+      "size": 35356
+    },
+    "tests/test_samples.py": {
+      "sha256": "122b9d5f582b21ae258b9541db33fcae4bc994692d737bfbadbaf9744dd70163",
+      "size": 10788
+    },
+    "tests/test_smoke.py": {
+      "sha256": "e7edb7c49582d2291e8b6596d09a8cab78a439ae63063ca46e0f16031406fec9",
+      "size": 2646
+    },
+    "tests/test_status_health.py": {
+      "sha256": "4afd5553f8c5904856b714545bb75f9d3494683e81c9f602add0bd564a47fd6b",
+      "size": 9400
+    }
+  },
+  "observed_at": "2026-08-02T22:16:30Z",
+  "production_comparison": {
+    "equal": true,
+    "image_app_main_sha256": "d4e38fa2cfb8c0c9806c43d9ebc1fb7574773680ded52f7331ee96fa5d6ad105",
+    "local_app_main_sha256": "d4e38fa2cfb8c0c9806c43d9ebc1fb7574773680ded52f7331ee96fa5d6ad105"
+  },
+  "root": "/path/to/ispindel-dashboard",
+  "schema_version": 1
+}

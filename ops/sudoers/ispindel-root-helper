@@ -1,0 +1,4 @@
+# Install as /etc/sudoers.d/ispindel-root-helper with owner root:root and mode 0440.
+# The helper parses a closed verb set and rejects arbitrary commands, paths,
+# Docker endpoints, systemd units, images, and resource names.
+ispindel ALL=(root) NOPASSWD: /usr/local/sbin/ispindel-root-helper *

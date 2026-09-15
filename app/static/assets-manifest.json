@@ -1,0 +1,68 @@
+{
+  "packages": [
+    {
+      "license": "MIT",
+      "license_bytes": 1093,
+      "license_path": "app/static/licenses/chartjs-LICENSE.md",
+      "license_sha256": "41a84aa2caba645f966a18d9c2056b73e6d3a81d80bc0046bc0011a2634d4cce",
+      "metadata_url": "https://registry.npmjs.org/chart.js/latest",
+      "name": "chart.js",
+      "npm_integrity": "sha512-GIjfiT9dbmHRiYi6Nl2yFCq7kkwdkp1W/lp2J99rX0yo9tgJGn3lKQATztIjb5tVtevcBtIdICNWqlq5+E8/Pw==",
+      "npm_shasum": "19dd1a9a386a3f6397691672231cb5fc9c052c35",
+      "tarball_sha256": "f540d98468457ac7a0aabb32006dfb066297e096c5ea063a5d80aa973d1c337a",
+      "tarball_url": "https://registry.npmjs.org/chart.js/-/chart.js-4.5.1.tgz",
+      "version": "4.5.1"
+    },
+    {
+      "license": "MIT",
+      "license_bytes": 1088,
+      "license_path": "app/static/licenses/chartjs-adapter-date-fns-LICENSE.md",
+      "license_sha256": "b4b8355c2cd2b18354980a0c6422181d7bd6e895d94ae88b3570e97c60eea03d",
+      "metadata_url": "https://registry.npmjs.org/chartjs-adapter-date-fns/latest",
+      "name": "chartjs-adapter-date-fns",
+      "npm_integrity": "sha512-Rs3iEB3Q5pJ973J93OBTpnP7qoGwvq3nUnoMdtxO+9aoJof7UFcRbWcIDteXuYd1fgAvct/32T9qaLyLuZVwCg==",
+      "npm_shasum": "c25f63c7f317c1f96f9a7c44bd45eeedb8a478e5",
+      "tarball_sha256": "53e583bed13f12d3fd59885debfff58f677031f95720632a046e925304dba498",
+      "tarball_url": "https://registry.npmjs.org/chartjs-adapter-date-fns/-/chartjs-adapter-date-fns-3.0.0.tgz",
+      "version": "3.0.0"
+    },
+    {
+      "license": "MIT",
+      "license_bytes": 1117,
+      "license_path": "app/static/licenses/date-fns-LICENSE.md",
+      "license_sha256": "8d3951c38967b964b1fe259bfd200c2647cc04c858b55a4414e3122a60f1ef4b",
+      "metadata_url": "https://registry.npmjs.org/date-fns/latest",
+      "name": "date-fns",
+      "npm_integrity": "sha512-+1UMbeh68lH1SegH83CGWwpb6OHHbpSgr3+s5Eww5M4CAgswBpoWS0AjTOfEJ33HiYKz1hdj/KTFprzXHmq/6w==",
+      "npm_shasum": "806539edf45c616b2b76b5f78b88c56ed3c7e036",
+      "tarball_sha256": "eb106d1e9276213d6144b221c103e4abb7d92186734f7505f5a3860427b41a06",
+      "tarball_url": "https://registry.npmjs.org/date-fns/-/date-fns-4.4.0.tgz",
+      "version": "4.4.0"
+    }
+  ],
+  "schema_version": 1,
+  "served_assets": [
+    {
+      "bytes": 208518,
+      "cache_control": "public, max-age=31536000, immutable",
+      "content_type": "application/javascript",
+      "package": "chart.js",
+      "package_version": "4.5.1",
+      "path": "app/static/chart.umd.js",
+      "route": "/static/chart.umd.js",
+      "sha256": "ecc3cd1eeb8c34d2178e3f59fd63ec5a3d84358c11730af0b9958dc886d7652a",
+      "tar_member": "package/dist/chart.umd.js"
+    },
+    {
+      "bytes": 50650,
+      "cache_control": "public, max-age=31536000, immutable",
+      "content_type": "application/javascript",
+      "package": "chartjs-adapter-date-fns",
+      "package_version": "3.0.0",
+      "path": "app/static/chartjs-adapter-date-fns.bundle.min.js",
+      "route": "/static/chartjs-adapter-date-fns.bundle.min.js",
+      "sha256": "ea7ab30d26c38dcf1f2d26bb43e73a94537b58f1906f55e1a546dd09321b5615",
+      "tar_member": "package/dist/chartjs-adapter-date-fns.bundle.min.js"
+    }
+  ]
+}

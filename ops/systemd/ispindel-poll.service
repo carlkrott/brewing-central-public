@@ -1,0 +1,17 @@
+[Unit]
+Description=Poll iSpindel devices and deliver state-transition alerts
+After=ispindel-stack.service network-online.target
+Requires=ispindel-stack.service
+Wants=ispindel-stack.service network-online.target
+
+[Service]
+Type=oneshot
+User=root
+Group=ispindel
+EnvironmentFile=/etc/ispindel/production.env
+ExecStart=/usr/bin/python3 /opt/ispindel-dashboard/scripts/poll-alert.py --url http://127.0.0.1:18098 --state /var/lib/ispindel/evidence/alert-state.json --poll-state /var/lib/ispindel/evidence/poll-state.json --send-alert /usr/local/lib/ispindel/send-alert.sh
+PrivateTmp=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/ispindel/evidence

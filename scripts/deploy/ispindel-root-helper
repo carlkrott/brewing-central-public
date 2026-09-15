@@ -1,0 +1,190 @@
+#!/usr/bin/env python3
+"""Closed privileged operations for local iSpindel deployment.
+
+The installed helper is intended to be the sole NOPASSWD sudo target.  It does
+not accept command strings, Docker endpoints, arbitrary units, or arbitrary
+filesystem destinations.  ``--plan`` validates and prints the exact operation
+without requiring root or performing I/O.
+"""
+from __future__ import annotations
+
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+from typing import NoReturn, Sequence
+
+DOCKER = "/usr/bin/docker"
+DOCKER_ENDPOINT = "unix:///var/run/docker.sock"
+SYSTEMCTL = "/usr/bin/systemctl"
+PRODUCTION_VOLUME = "ispindel-dashboard_ispindel-data"
+PROJECT_ROOT = Path("/opt/ispindel-dashboard")
+IMAGE_RE = re.compile(r"sha256:[0-9a-f]{64}")
+NONCE_RE = re.compile(r"ispindel-rehearsal-(volume|container|helper|network)-[0-9a-f]{8}")
+BACKUP_DB_RE = re.compile(r"ispindel-[0-9]{8}T[0-9]{6}Z-[0-9a-f]{8}\.db")
+SAFE_PATH_PART_RE = re.compile(r"[A-Za-z0-9._-]+")
+BACKUP_ROOTS = (
+    Path("/var/backups/ispindel-dashboard"),
+    PROJECT_ROOT / "evidence",
+)
+SEED_CODE = (
+    "import os,shutil,sqlite3;"
+    "src='/source/ispindel.db';dst='/target/ispindel.db';"
+    "tmp='/target/.ispindel.db.seed';"
+    "[os.unlink(side) for side in (dst+'-wal',dst+'-shm') if os.path.lexists(side)];"
+    "shutil.copyfile(src,tmp);"
+    "os.chown(tmp,10001,10001);os.chmod(tmp,0o600);os.replace(tmp,dst);"
+    "os.chown(dst,10001,10001);os.chmod(dst,0o600);"
+    "c=sqlite3.connect(dst);"
+    "assert str(c.execute('PRAGMA journal_mode=WAL').fetchone()[0]).lower()=='wal';"
+    "assert c.execute('PRAGMA integrity_check').fetchone()[0]=='ok';"
+    "assert c.execute('PRAGMA foreign_key_check').fetchall()==[];"
+    "c.close();"
+    "check=sqlite3.connect('file:'+dst+'?mode=ro',uri=True);"
+    "assert str(check.execute('PRAGMA journal_mode').fetchone()[0]).lower()=='wal';"
+    "check.close();"
+    "[os.chown('/target/'+name,10001,10001) or os.chmod('/target/'+name,0o600) for name in ('ispindel.db-wal','ispindel.db-shm') if os.path.exists('/target/'+name)];"
+    "os.chown('/target',10001,10001);os.chmod('/target',0o700)"
+)
+
+class HelperError(RuntimeError):
+    """An invocation violated the helper's closed contract."""
+
+
+def fail(message: str) -> NoReturn:
+    print(f"ispindel-root-helper: {message}", file=sys.stderr)
+    raise SystemExit(2)
+
+
+def docker_command(*arguments: str) -> list[str]:
+    return [DOCKER, "--host", DOCKER_ENDPOINT, *arguments]
+
+
+def validate_volume_name(name: str, *, allow_production: bool) -> str:
+    if allow_production and name == PRODUCTION_VOLUME:
+        return name
+    match = NONCE_RE.fullmatch(name)
+    if match and match.group(1) == "volume":
+        return name
+    raise HelperError("volume name is not allowlisted")
+
+
+def validate_nonce_name(name: str, resource: str) -> str:
+    match = NONCE_RE.fullmatch(name)
+    if not match or match.group(1) != resource:
+        raise HelperError(f"{resource} name is not an exact rehearsal nonce")
+    return name
+
+
+def validate_image(image: str) -> str:
+    if not IMAGE_RE.fullmatch(image):
+        raise HelperError("image must be an immutable sha256 reference")
+    return image
+
+
+def validate_seed_source(value: str) -> Path:
+    path = Path(value)
+    if (not path.is_absolute()
+            or (path.name != "ispindel.db" and not BACKUP_DB_RE.fullmatch(path.name))
+            or ".." in path.parts):
+        raise HelperError("seed source must be an absolute allowlisted backup database path")
+    if not all(SAFE_PATH_PART_RE.fullmatch(part) for part in path.parts[1:]):
+        raise HelperError("seed source contains an unsafe path component")
+    if not any(path.is_relative_to(root) and path != root / "ispindel.db" for root in BACKUP_ROOTS):
+        raise HelperError("seed source is outside the allowlisted generation roots")
+    return path
+
+
+def seed_command(source: Path, volume: str, image: str) -> list[str]:
+    return docker_command(
+        "run", "--rm", "--network", "none", "--pull", "never", "--user", "0:0",
+        "--mount", f"type=bind,src={source},dst=/source/ispindel.db,readonly",
+        "--mount", f"type=volume,src={volume},dst=/target",
+        "--entrypoint", "python3", image, "-c", SEED_CODE,
+    )
+
+
+def parse(argv: Sequence[str]) -> tuple[bool, str, list[str], dict[str, object]]:
+    values = list(argv)
+    plan_only = bool(values and values[0] == "--plan")
+    if plan_only:
+        values.pop(0)
+    if not values:
+        raise HelperError("a closed verb is required")
+    verb, arguments = values[0], values[1:]
+    payload: dict[str, object]
+    if verb in {"volume-inspect", "volume-create"}:
+        if len(arguments) != 1:
+            raise HelperError(f"{verb} requires exactly one volume name")
+        volume = validate_volume_name(arguments[0], allow_production=True)
+        action = "inspect" if verb == "volume-inspect" else "create"
+        payload = {"commands": [docker_command("volume", action, "--", volume)]}
+    elif verb == "volume-seed":
+        if len(arguments) != 3:
+            raise HelperError("volume-seed requires SOURCE VOLUME IMMUTABLE_IMAGE")
+        source = validate_seed_source(arguments[0])
+        volume = validate_volume_name(arguments[1], allow_production=True)
+        image = validate_image(arguments[2])
+        payload = {"commands": [seed_command(source, volume, image)], "seed_source": str(source)}
+    elif verb == "volume-remove-nonce":
+        if len(arguments) != 1:
+            raise HelperError("volume-remove-nonce requires exactly one nonce name")
+        name = validate_nonce_name(arguments[0], "volume")
+        payload = {"commands": [docker_command("volume", "rm", "--", name)]}
+    elif verb == "container-remove-nonce":
+        if len(arguments) != 1:
+            raise HelperError("container-remove-nonce requires exactly one nonce name")
+        name = validate_nonce_name(arguments[0], "container")
+        payload = {"commands": [docker_command("container", "rm", "--force", "--", name)]}
+    elif verb in {"systemctl-start-caddy", "systemctl-stop-caddy"}:
+        if arguments != ["ispindel-caddy.service"]:
+            raise HelperError(f"{verb} requires exact unit ispindel-caddy.service")
+        action = "start" if verb == "systemctl-start-caddy" else "stop"
+        payload = {"commands": [[SYSTEMCTL, action, "--", "ispindel-caddy.service"]]}
+    else:
+        raise HelperError("unknown closed verb")
+    return plan_only, verb, arguments, payload
+
+
+def execute(verb: str, payload: dict[str, object]) -> None:
+    if os.geteuid() != 0:
+        raise HelperError("execution requires root; use --plan for validation")
+    if verb == "volume-seed":
+        source_value = payload.get("seed_source")
+        if not isinstance(source_value, str):
+            raise HelperError("internal seed plan lacks its source")
+        source = Path(source_value)
+        if source.is_symlink() or not source.is_file():
+            raise HelperError("seed source must exist as a regular non-symlink file")
+        resolved = source.resolve(strict=True)
+        if not any(resolved.is_relative_to(root) for root in BACKUP_ROOTS):
+            raise HelperError("resolved seed source escapes its allowlisted root")
+    commands = payload.get("commands")
+    if not isinstance(commands, list):
+        raise HelperError("internal plan lacks commands")
+    for command in commands:
+        if not isinstance(command, list) or not all(isinstance(value, str) for value in command):
+            raise HelperError("internal command plan is invalid")
+        subprocess.run(command, check=True)
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    try:
+        plan_only, verb, _arguments, payload = parse(sys.argv[1:] if argv is None else argv)
+        if plan_only:
+            print(json.dumps(payload, sort_keys=True))
+            return 0
+        execute(verb, payload)
+        return 0
+    except HelperError as exc:
+        fail(str(exc))
+    except subprocess.CalledProcessError as exc:
+        print(f"ispindel-root-helper: closed command failed with exit {exc.returncode}", file=sys.stderr)
+        return 1
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

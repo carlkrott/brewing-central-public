@@ -1,0 +1,134 @@
+{
+  "container": {
+    "cap_drop": [
+      "ALL"
+    ],
+    "command": [
+      "python3",
+      "-m",
+      "uvicorn",
+      "app.main:app",
+      "--host",
+      "0.0.0.0",
+      "--port",
+      "8098"
+    ],
+    "compose_labels": {
+      "com.docker.compose.config-hash": "ca8014a8991a0f8ebadb449f66719dee84dcb89687ca947fe97d4fff29e80ce3",
+      "com.docker.compose.container-number": "1",
+      "com.docker.compose.depends_on": "",
+      "com.docker.compose.image": "sha256:fb881eed8fc8d1e41bc9d9666355d35bd62770792b11495dd61060163eb4553d",
+      "com.docker.compose.oneoff": "False",
+      "com.docker.compose.project": "ispindel-dashboard",
+      "com.docker.compose.project.config_files": "/opt/ispindel-dashboard/docker-compose.yml",
+      "com.docker.compose.project.environment_file": "/etc/ispindel/production.env",
+      "com.docker.compose.project.working_dir": "/opt/ispindel-dashboard",
+      "com.docker.compose.replace": "ispindel-dashboard",
+      "com.docker.compose.service": "ispindel-dashboard",
+      "com.docker.compose.version": "5.1.4"
+    },
+    "created": "2026-08-06T10:12:45.076128464Z",
+    "environment_nonsecret": [
+      "BATTERY_EVIDENCE_PATH=/health-evidence/battery-state.json",
+      "BATTERY_TTL_SECONDS=600",
+      "HEARTBEAT_EVIDENCE_PATH=/health-evidence/heartbeat.json",
+      "HEARTBEAT_TTL_SECONDS=5400",
+      "SQLITE_PATH=/data/ispindel.db"
+    ],
+    "health": "healthy",
+    "id": "c53abc075f14ced0e30c75819cd4aae0f15d1f385b5b6159cab49b740cbfe421",
+    "image_id": "sha256:fb881eed8fc8d1e41bc9d9666355d35bd62770792b11495dd61060163eb4553d",
+    "image_repo_digests": [],
+    "mounts": [
+      {
+        "destination": "/data",
+        "name": "ispindel-dashboard_ispindel-data",
+        "rw": true,
+        "source": "/var/lib/docker/volumes/ispindel-dashboard_ispindel-data/_data",
+        "type": "volume"
+      },
+      {
+        "destination": "/health-evidence",
+        "name": null,
+        "rw": false,
+        "source": "/var/lib/ispindel/evidence",
+        "type": "bind"
+      },
+      {
+        "destination": "/run/secrets",
+        "name": null,
+        "rw": false,
+        "source": "/etc/ispindel/secrets",
+        "type": "bind"
+      }
+    ],
+    "name": "ispindel-dashboard",
+    "ports": {
+      "8098/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "18098"
+        }
+      ]
+    },
+    "read_only": true,
+    "restart_policy": {
+      "MaximumRetryCount": 0,
+      "Name": "unless-stopped"
+    },
+    "security_opt": [
+      "no-new-privileges:true"
+    ],
+    "state": "running",
+    "user": "10001:10001"
+  },
+  "database": {
+    "db_size_bytes": 61440,
+    "integrity_check": "ok",
+    "journal_mode": "wal",
+    "path": "/data/ispindel.db",
+    "row_counts": {
+      "calibration_active": 0,
+      "calibrations": 0,
+      "devices": 3,
+      "samples": 18,
+      "schema_migrations": 2
+    },
+    "schema_sha256": "497d2fb094f0aa1c707a056107d60f9fa5bb916c5795d79784095c1262bb3e76",
+    "tables": [
+      "calibration_active",
+      "calibrations",
+      "devices",
+      "samples",
+      "schema_migrations"
+    ],
+    "user_version": 2
+  },
+  "host": "operator@example.test",
+  "host_input_sha256": {
+    "/opt/ispindel-dashboard/Dockerfile": "4b09099c174c971ecfdbc6310ddaabe9c9c4d1351847c0d06c669366bebbaf1e",
+    "/opt/ispindel-dashboard/app/main.py": "b4ad967c85824e2624196939b97c1dccfb5d37858100bbc46515718cefe2c619",
+    "/opt/ispindel-dashboard/docker-compose.yml": "4fa9aff5d1e39ba6f8065887fac64f23903f3aa91ae1d33203d1baf0ac2d83c5"
+  },
+  "hostname": "placeholder-host",
+  "image_app_main": {
+    "gid": 0,
+    "sha256": "b4ad967c85824e2624196939b97c1dccfb5d37858100bbc46515718cefe2c619",
+    "size": 93331,
+    "uid": 0
+  },
+  "observed_at": "2026-08-06T21:31:35Z",
+  "safety": {
+    "database_copied": false,
+    "production_mutated": false,
+    "secrets_recorded": false
+  },
+  "schema_version": 1,
+  "tailscale_ip": "placeholder-tailscale-ip",
+  "volume": {
+    "driver": "local",
+    "labels": {},
+    "mountpoint": "/var/lib/docker/volumes/ispindel-dashboard_ispindel-data/_data",
+    "name": "ispindel-dashboard_ispindel-data"
+  }
+}

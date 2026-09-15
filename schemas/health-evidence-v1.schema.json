@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ispindel.invalid/schemas/health-evidence-v1.schema.json",
+  "title": "iSpindel health evidence v1",
+  "type": "object",
+  "required": ["schema_version", "kind", "observed_at", "state", "detail"],
+  "properties": {
+    "schema_version": {"const": "health-evidence-v1"},
+    "kind": {"enum": ["battery", "heartbeat"]},
+    "observed_at": {"type": "string", "format": "date-time", "pattern": "Z$"},
+    "state": {"enum": ["ok", "warning", "critical"]},
+    "detail": {"type": "string", "minLength": 1},
+    "percent": {"type": "number", "minimum": 0, "maximum": 100},
+    "charging": {"type": ["boolean", "string"]},
+    "source": {"type": "string"},
+    "host": {"type": "string"},
+    "poll_failed": {"type": "boolean"},
+    "alert_attempted": {"type": "boolean"},
+    "alert_delivered": {"type": "boolean"}
+  },
+  "allOf": [
+    {"if": {"properties": {"kind": {"const": "battery"}}}, "then": {"required": ["percent"]}},
+    {"if": {"properties": {"kind": {"const": "heartbeat"}}}, "then": {"required": ["poll_failed", "alert_attempted", "alert_delivered"]}}
+  ],
+  "additionalProperties": false
+}

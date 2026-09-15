@@ -1,0 +1,4 @@
+# Android/Termux Python 3.14 runtime. Keep separate from the production container lock.
+fastapi==0.141.1
+pydantic==2.13.5
+uvicorn==0.52.4

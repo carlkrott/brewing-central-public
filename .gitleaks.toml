@@ -1,0 +1,54 @@
+# Gitleaks v8 configuration for this repository.
+#
+# Scope: narrowly suppress synthetic-test false positives previously flagged
+# by the default `generic-api-key` rule during full-history scans. No real
+# credentials are exempted, and the default ruleset otherwise remains active.
+#
+# Allowlist #1 covers canonical 8-4-4-4-12 hex UUIDs (lower/upper) when they
+# appear under any `tests/` path. These UUIDs are synthetic test fixture
+# identifiers (ingredient/addition/series/culture/step/chat IDs) — they are
+# not credentials.
+#
+# Allowlist #2 covers the exact PBKDF2_ITERATIONS symbol in
+# tests/test_security.py, which is a library constant imported from
+# app.security, not a secret.
+#
+# Nothing else is exempted; `generic-api-key` is NOT disabled globally.
+
+title = "iSpindel dashboard gitleaks config (extends default rules)"
+
+[extend]
+useDefault = true
+
+# Override the default `generic-api-key` rule to attach narrow allowlists.
+# Re-declaring the rule under [rules] replaces the extended rule entry, so
+# we restate the identifying fields (id + description) to keep the rule
+# itself intact and only inject allowlist semantics via [[rules.allowlists]]
+# (gitleaks v8 array-of-tables — each entry ANDs paths with regexes).
+[[rules]]
+id = "generic-api-key"
+description = "Detected a Generic API Key, potentially exposing access to various services and sensitive operations."
+
+# Synthetic test fixture UUIDs (8-4-4-4-12 lower/upper hex) under tests/.
+# AND-semantics: a finding must match BOTH the path prefix AND the UUID
+# regex to be suppressed. Real-looking UUID-shaped secrets outside tests/
+# remain flagged.
+[[rules.allowlists]]
+paths = [
+  '''tests/.*''',
+]
+regexes = [
+  '''[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}''',
+]
+regexTarget = "match"
+
+# PBKDF2_ITERATIONS imported from app.security into tests/test_security.py —
+# library constant, not a credential.
+[[rules.allowlists]]
+paths = [
+  '''tests/test_security\.py''',
+]
+regexes = [
+  '''\bPBKDF2_ITERATIONS\b''',
+]
+regexTarget = "match"

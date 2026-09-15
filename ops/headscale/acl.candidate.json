@@ -1,0 +1,65 @@
+{
+  "tagOwners": {
+    "tag:admin": ["operator@example.test"],
+    "tag:bookgen": ["operator@example.test"],
+    "tag:publisher": ["operator@example.test"],
+    "tag:nas": ["operator@example.test"],
+    "tag:shared": ["operator@example.test"],
+    "tag:coord": ["operator@example.test"],
+    "tag:idle": ["operator@example.test"]
+  },
+  "groups": {
+    "group:ispindel-viewers": ["operator@example.test"]
+  },
+  "acls": [
+    {
+      "action": "accept",
+      "src": ["*"],
+      "dst": ["placeholder-dns-host:53", "placeholder-dns-host:53", "placeholder-dns-host:53", "placeholder-dns-host:53"]
+    },
+    {
+      "action": "accept",
+      "src": ["group:ispindel-viewers"],
+      "dst": ["tag:publisher:443"]
+    },
+    {
+      "action": "accept",
+      "src": ["tag:admin"],
+      "dst": ["*:*"]
+    },
+    {
+      "action": "accept",
+      "src": ["tag:bookgen"],
+      "dst": ["tag:admin:*", "tag:nas:*", "tag:shared:*"]
+    },
+    {
+      "action": "accept",
+      "src": ["tag:publisher"],
+      "dst": ["tag:bookgen:*", "tag:admin:*", "tag:nas:*", "tag:shared:*"]
+    },
+    {
+      "action": "accept",
+      "src": ["tag:shared"],
+      "dst": ["tag:nas:*"]
+    },
+    {
+      "action": "accept",
+      "src": ["placeholder-camera-host"],
+      "dst": ["placeholder-camera-target:8554"]
+    }
+  ],
+  "ssh": [
+    {
+      "action": "accept",
+      "src": ["tag:admin"],
+      "dst": ["tag:admin", "tag:bookgen", "tag:publisher", "tag:nas", "tag:shared", "tag:coord", "tag:idle"],
+      "users": ["ubuntu", "root"]
+    },
+    {
+      "action": "accept",
+      "src": ["tag:publisher"],
+      "dst": ["tag:bookgen", "tag:admin"],
+      "users": ["ubuntu", "root"]
+    }
+  ]
+}

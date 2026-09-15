@@ -1,0 +1,17 @@
+023dc038422502fa28a09c7a30bf2b6991512da7dcdb8fd35fe57cfc154126f4  uvicorn-0.34.0-py3-none-any.whl
+1d8214789a24de455a8b8bd8ae6fe3c6b69a5e3d64aa8a8e5d68e694bbcb285a  python_dotenv-1.2.2-py3-none-any.whl
+427d664bf0b8a2b34ff5dd0f5a18df00591adcee7198fbd71981054cef37b584  pydantic-2.10.6-py3-none-any.whl
+481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8  typing_extensions-4.16.0-py3-none-any.whl
+595633ce89f8ffa71a015caed34a5b2dc1c0cdb3f0f1fbd1e69339cf2abeec35  starlette-0.46.2-py3-none-any.whl
+63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86  h11-0.16.0-py3-none-any.whl
+6fb4aadc0b9a0c063206846d603b92030eb6f03069151a625667f982887153e2  pydantic_core-2.27.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+7b5b1ac819a3f946d3b2ee07f09149578ae76066d70b44df3fa990add49a82e4  uvloop-0.22.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+7f952cbe720b688055e3f87de14f5c3e5fdaa8bc3928985c4077ca689de849a2  idna-3.18-py3-none-any.whl
+9f505dda5ac9f0c8309b5e8bd445a8c2bf7246f3ce950121e45ea15bc41d1494  anyio-4.14.2-py3-none-any.whl
+abfa93514d5d7fe50988c4b6092585da0e9a737c1063530cf62fecfe93f7acf0  websockets-17.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
+b15fc622b0f869d19207c4089a501d9bcc63ca5e071ffdd2f03f922df882dcb2  httptools-0.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
+ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc  pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+e53a384f76b631c3ae5334ce6a52f0baa3a911eb94a4eac7f160079868b716d5  watchfiles-1.2.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+e6f9f66136c816745b9d65817da91d61d957fb16e02e4dcd0552553c5a197b76  click-8.4.2-py3-none-any.whl
+f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0  annotated_types-0.8.0-py3-none-any.whl
+fdcc9ed272eaef038952923bef2b735c02372402d1203ee1210af4eea7a78d2b  fastapi-0.116.0-py3-none-any.whl

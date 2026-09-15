@@ -1,0 +1,28 @@
+[Unit]
+Description=Disposable iSpindel restore rehearsal
+After=docker.service ispindel-stack.service
+Requires=docker.service
+Requires=ispindel-stack.service
+ConditionPathExists=/var/backups/ispindel-dashboard/index.json
+
+[Service]
+Type=oneshot
+User=ispindel
+Group=ispindel
+EnvironmentFile=/etc/ispindel/backup.env
+Environment=DOCKER_HOST=unix:///var/run/docker.sock
+ExecStart=/usr/bin/python3 /usr/local/libexec/ispindel/rehearse-restore.py --paired --manifest-index /var/backups/ispindel-dashboard/index.json --image ${ISPINDEL_IMAGE_REF} --evidence-dir /var/lib/ispindel/restore-drills
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+ReadWritePaths=/var/lib/ispindel/restore-drills
+TimeoutStartSec=30min
+StandardOutput=journal
+StandardError=journal

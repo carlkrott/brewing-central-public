@@ -1,0 +1,32 @@
+{
+  "schema_version": "ispindel-phase7b-authority-descriptor-v1",
+  "verdict": "GO",
+  "authority": {
+    "path": "/path/to/PHASE7B-REPAIR-AUTHORITY.json",
+    "sha256": "fc4f182cd8fa69908f724404db8467d1d66bdfda476f10af2f3230942b547f4d",
+    "size": 1655
+  },
+  "reconstructed_freeze": {
+    "sha256": "32837962f192f5fef11c9c50434bc4098043128b712933d340c3fb8c67ef9096",
+    "artifact_count": 38,
+    "payload_digest_sha256": "5a5ba14a55119692343eff0c3f845448059d81dc98a5f41031ed417315f2812b"
+  },
+  "repair_receipt_sha256": "4606fc987144a73134cf959d07cff505b3c30274c5bef91d40918fc31e54a7fa",
+  "contract_sha256": "ade06ff5e7305443dfaa7eb5bae62a753f9efc8163543a8f1b1014ed6bca4748",
+  "reviews": {
+    "parent": {
+      "path": "reviews/reconstructed-parent-r2.txt",
+      "sha256": "8c7dba930c00c6dcff36a8619ebfe56dcbc9c6a02f7552d0f04d602eab4e25e0",
+      "model": "MiniMax-M3",
+      "provider": "minimax-oauth"
+    },
+    "adversarial": {
+      "path": "reviews/reconstructed-adversarial.txt",
+      "sha256": "8a2e03732af790d3df1ecac2cc12c1ff46ae1476be67c8c3ab72fba5288973f3",
+      "model": "MiniMax-M3",
+      "provider": "minimax-oauth"
+    }
+  },
+  "same_host_limitation": true,
+  "production_authorization": false
+}

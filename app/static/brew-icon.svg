@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Brewing Central">
+  <rect width="512" height="512" rx="112" fill="#1f6a3c"/>
+  <path fill="#f5faf6" d="M156 92h200v55l-20 35v210c0 28-22 50-50 50h-60c-28 0-50-22-50-50V182l-20-35V92zm44 48 18 31v221c0 4 4 8 8 8h60c4 0 8-4 8-8V171l18-31H200z"/>
+  <path fill="#b9e1c5" d="M214 260c30-34 54-15 83-42v165c0 10-8 17-17 17h-48c-10 0-18-7-18-17V260z"/>
+  <circle cx="258" cy="286" r="13" fill="#f5faf6"/>
+  <circle cx="276" cy="330" r="9" fill="#f5faf6"/>
+</svg>

@@ -1,0 +1,60 @@
+services:
+  ispindel-dashboard:
+    build:
+      context: .
+      network: none
+      pull: false
+    image: ${ISPINDEL_IMAGE_REF:-ispindel-dashboard:dev}
+    container_name: ${ISPINDEL_CONTAINER_NAME:-ispindel-dashboard}
+    restart: unless-stopped
+    user: "10001:10001"
+    group_add:
+      - "${ISPINDEL_GID:?ISPINDEL_GID must be bound}"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      SQLITE_PATH: /data/ispindel.db
+      BREW_SQLITE_PATH: /data/brew.db
+      ISPINDEL_MODE: ${ISPINDEL_MODE:-production}
+      ISPINDEL_ADMIN_CONFIGURED: ${ISPINDEL_ADMIN_CONFIGURED:-false}
+      TAILNET_FQDN: ${TAILNET_FQDN:-}
+      ISPINDEL_TOKEN_FILE: /run/secrets/ingest-tokens.json
+      BATTERY_EVIDENCE_PATH: /health-evidence/battery-state.json
+      HEARTBEAT_EVIDENCE_PATH: /health-evidence/heartbeat.json
+      BATTERY_TTL_SECONDS: "600"
+      HEARTBEAT_TTL_SECONDS: "5400"
+      # ``scripts/backup-production.py`` writes ``backup_health.json`` under
+      # ``${ISPINDEL_BACKUP_ROOT:-/var/backups/ispindel-dashboard}`` only after
+      # off-host verification and directory promotion. The dashboard binds the
+      # single file (mode 0o644) read-only — the database generations
+      # directory is deliberately NOT mounted.
+      BACKUP_HEALTH_PATH: /backup-health/backup_health.json
+      BACKUP_HEALTH_TTL_SECONDS: "86400"
+    volumes:
+      - ispindel-data:/data
+      - type: bind
+        source: ${ISPINDEL_EVIDENCE_DIR:?ISPINDEL_EVIDENCE_DIR is required}
+        target: /health-evidence
+        read_only: true
+      - type: bind
+        source: ${ISPINDEL_BACKUP_HEALTH_FILE-/var/backups/ispindel-dashboard/backup_health.json}
+        target: /backup-health/backup_health.json
+        read_only: true
+      - type: bind
+        source: ${ISPINDEL_SECRETS_DIR:?ISPINDEL_SECRETS_DIR is required}
+        target: /run/secrets
+        read_only: true
+    ports:
+      - "${ISPINDEL_BACKEND_PUBLISH:-127.0.0.1:18098:8098}"
+
+volumes:
+  ispindel-data:
+    # The deployment promotion can use a release-unique Compose project while
+    # still binding the already-verified production volume. Normal production
+    # invocations retain the historical project-scoped volume name.
+    name: ${ISPINDEL_DATA_VOLUME:-${COMPOSE_PROJECT_NAME:-ispindel-dashboard}_ispindel-data}
