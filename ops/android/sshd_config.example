@@ -1,0 +1,87 @@
+# sshd_config.example — Termux openssh control-plane configuration template.
+#
+# This file is a TEMPLATE for the on-device sshd configuration. Stable Termux
+# placeholders are used throughout. DO NOT hardcode live IPs, hostnames,
+# usernames, key fingerprints, or authorized_keys contents in this template.
+#
+# Path placeholders assume the standard Termux layout:
+#   <TERMUX_APP_ROOT>  — Termux app's private home directory
+#                        (e.g. /data/data/com.termux/files/home)
+#   <TERMUX_PREFIX>    — Termux usr prefix
+#                        (e.g. /data/data/com.termux/files/usr)
+#
+# Deployment path convention for this control plane:
+#   <TERMUX_APP_ROOT>/brewing-central/control/sshd/sshd_config
+#
+# The provisioning script (provision-phone-control-plane.sh) renders this
+# template into a 0600 file owned by the Termux uid.
+
+# ---- network --------------------------------------------------------------
+# Bind and port are supplied by phone-sshd-loop.sh through a private effective
+# config rendered from this template. This template intentionally has no
+# ListenAddress, Include, or Port directive so an additive OpenSSH option can
+# never widen the listener beyond the validated Tailnet-only endpoint.
+AddressFamily inet
+Protocol 2
+
+# ---- crypto policy --------------------------------------------------------
+HostKey <TERMUX_APP_ROOT>/brewing-central/control/sshd/host_ed25519_key
+KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com
+MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com
+
+# ---- authorized keys (single automation principal only) -------------------
+# Restrict to one automation authorized_keys file rendered at install time by
+# provision-phone-control-plane.sh. sshd will ignore any other keys, so a
+# stray id_rsa / id_ed25519 left in ~/.ssh/ cannot authenticate.
+AuthorizedKeysFile <TERMUX_APP_ROOT>/brewing-central/control/sshd/automation/authorized_keys
+
+# ---- authentication (key-only) -------------------------------------------
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+ChallengeResponseAuthentication no
+PermitEmptyPasswords no
+PermitRootLogin no
+PubkeyAuthentication yes
+AuthenticationMethods publickey
+MaxAuthTries 3
+LoginGraceTime 20
+StrictModes yes
+# Cap concurrent unauthenticated handshakes to keep the forced-command surface
+# bounded: start=3, rate=50/100, full=10.
+MaxStartups 3:50:10
+
+# ---- session hardening ---------------------------------------------------
+# Keep idle control sessions observable but bounded. The phone-management
+# dispatch always issues short, bounded commands; long-running forwarders are
+# explicitly disabled below.
+ClientAliveInterval 60
+ClientAliveCountMax 3
+
+# ---- forwarding / tunneling (all disabled) -------------------------------
+AllowAgentForwarding no
+AllowTcpForwarding no
+AllowStreamLocalForwarding no
+GatewayPorts no
+X11Forwarding no
+PermitTunnel no
+PermitUserEnvironment no
+
+# ---- user rc / PTY -------------------------------------------------------
+# Forced-command dispatch runs each connection through phone-management-
+# dispatch.py; interactive shells and per-user rc files would defeat that
+# boundary, so both are disabled.
+ForceCommand <TERMUX_APP_ROOT>/brewing-central/control/bin/phone-management-dispatch.py
+PermitUserRC no
+PermitTTY no
+DisableForwarding yes
+
+# ---- logging -------------------------------------------------------------
+SyslogFacility AUTH
+LogLevel INFO
+
+# ---- misc ---------------------------------------------------------------
+UseDNS no
+Compression no
+PrintMotd no
+AcceptEnv LANG LC_*

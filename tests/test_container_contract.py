@@ -333,7 +333,7 @@ SENSITIVE_DOCKERIGNORE_TARGETS = (
     "data/brew.db",
     "data/ispindel.db",
     "logs/dashboard.log",
-    ".hermes/plans/local.md",
+    ".private/plans/local.md",
     "descriptors/activation.json",
     "dist/releases/20260101T000000Z-deadbeef/ispindel.tar.zst",
     "release-staging/pending.tar.gz",

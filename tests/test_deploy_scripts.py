@@ -6,6 +6,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import stat
 import subprocess
@@ -23,85 +24,27 @@ PREDECESSOR = ROOT / "descriptors" / "predecessor-production.json"
 CONTRACT = ROOT / "contracts" / "ispindel-predecessor-expected-missing-amendment-v3.json"
 CONTRACT_VERSION = "ispindel-predecessor-expected-missing/2026-08-06-v3"
 EXPECTED_MISSING_PATH = "/tmp/ispindel-phase06a1-exact-build-20260730T023218Z-114bd2aa2a0dfe0943295766b177da0f/compose.override.yml"
-# Deterministic identifiers for synthetic-only fixtures and tests. The generated
-# ``descriptors/RELEASE.json`` carries a private commit SHA in its ``release_id``
-# and is therefore removed from the public source export; these constants let
-# receipt fixtures and tampered-descriptor tests stay stable across releases
-# without ever reading the generated descriptor.
-SYNTHETIC_RELEASE_ID = "20260803T011203Z-3607db5a9611"
-SYNTHETIC_RELEASE_MANIFEST_SHA256 = (
-    "0000000000000000000000000000000000000000000000000000000000000000"
+_MISSING_RELEASE_REASON = "private release manifest is intentionally absent from the public source export"
+RELEASE_DATA = json.loads(RELEASE_MANIFEST.read_text()) if RELEASE_MANIFEST.is_file() else {}
+_RELEASE_ID = RELEASE_DATA.get("release_id")
+RELEASE_ID = _RELEASE_ID if isinstance(_RELEASE_ID, str) else ""
+_RELEASE_ROOT = RELEASE_DATA.get("release_root")
+RELEASE_ROOT = _RELEASE_ROOT if isinstance(_RELEASE_ROOT, str) else ""
+_VALID_RELEASE_ID = bool(re.fullmatch(r"[0-9]{8}T[0-9]{6}Z-[0-9a-f]{12}", RELEASE_ID))
+_EXPECTED_RELEASE_ROOT = f"dist/releases/{RELEASE_ID}/payload" if _VALID_RELEASE_ID else ""
+FROZEN_RELEASE_ROOT = ROOT / _EXPECTED_RELEASE_ROOT if _EXPECTED_RELEASE_ROOT else ROOT / "__missing_frozen_release__"
+requires_frozen_release = pytest.mark.skipif(
+    not RELEASE_MANIFEST.is_file()
+    or not _VALID_RELEASE_ID
+    or RELEASE_ROOT != _EXPECTED_RELEASE_ROOT
+    or not FROZEN_RELEASE_ROOT.is_dir()
+    or FROZEN_RELEASE_ROOT.is_symlink(),
+    reason="frozen release payload is not present in this checkout",
 )
-
-
-def _load_release_id() -> str:
-    """Return ``RELEASE.json``'s ``release_id`` or the synthetic fallback.
-
-    The public source export intentionally omits ``descriptors/RELEASE.json``
-    because the generated ``release_id`` embeds a private commit SHA. Tests
-    that genuinely require the descriptor (and therefore the real release id)
-    guard themselves with :func:`_require_release_manifest`; everyone else uses
-    :data:`SYNTHETIC_RELEASE_ID` so the module can import cleanly on a public
-    clone.
-    """
-    if RELEASE_MANIFEST.is_file():
-        return json.loads(RELEASE_MANIFEST.read_text())["release_id"]
-    return SYNTHETIC_RELEASE_ID
-
-
-RELEASE_ID = _load_release_id()
-
-
-def _release_payload_root() -> Path:
-    """Resolve the generated release payload directory declared by RELEASE.json.
-
-    Public CI exports intentionally omit ``dist/`` (per ``.gitignore``), so this
-    directory is only present when the release has been built locally. Tests that
-    require the generated payload skip themselves when the directory is absent.
-    """
-    return ROOT / "dist" / "releases" / RELEASE_ID / "payload"
-
-
-def _require_release_manifest() -> None:
-    """Skip the calling test when ``descriptors/RELEASE.json`` is absent.
-
-    The public source export deliberately omits the generated descriptor because
-    its ``release_id`` embeds a private commit SHA. Tests that read the
-    descriptor to verify the live release (load the manifest, cross-check
-    artefact hashes, etc.) must skip rather than fail when the file is missing
-    on a clean public clone.
-    """
-    if not RELEASE_MANIFEST.is_file():
-        pytest.skip(
-            f"generated release descriptor is absent at {RELEASE_MANIFEST} "
-            f"(the descriptor is intentionally removed from public source "
-            f"exports because its release_id embeds a private commit SHA)"
-        )
-
-
-def _require_release_payload() -> None:
-    """Skip the calling test when the generated release payload is absent.
-
-    Five deployment tests load ``descriptors/RELEASE.json`` through
-    ``deploy.load_release`` (directly or via the deploy entrypoints), which
-    shells out to ``scripts/verify-release.py``. The verifier rejects the
-    manifest when the generated ``dist/releases/<release_id>/payload/`` tree is
-    absent, because that tree is the source of truth for the SHA-256 bindings.
-    Public CI exports deliberately omit ``dist/`` from the tracked source, so on
-    a clean public clone those tests must be skipped rather than failed.
-
-    These tests already read ``descriptors/RELEASE.json`` and therefore also
-    require the manifest itself; we reuse :func:`_require_release_manifest` so
-    the skip reason stays accurate on a public clone that ships the descriptor
-    but no ``dist/`` payload tree.
-    """
-    _require_release_manifest()
-    payload_root = _release_payload_root()
-    if not payload_root.is_dir():
-        pytest.skip(
-            f"generated release payload is absent at {payload_root} (dist/ is "
-            f"intentionally ignored in public source exports); release_id={RELEASE_ID}"
-        )
+requires_release_manifest = pytest.mark.skipif(
+    not RELEASE_MANIFEST.is_file(),
+    reason=_MISSING_RELEASE_REASON,
+)
 
 
 def digest(path: Path) -> str:
@@ -119,6 +62,8 @@ def deploy() -> ModuleType:
 
 @pytest.fixture()
 def stage01_receipt(tmp_path: Path, deploy: ModuleType) -> tuple[Path, str, dict[str, object]]:
+    if not RELEASE_MANIFEST.is_file():
+        pytest.skip(_MISSING_RELEASE_REASON)
     compose_paths = ["/opt/ispindel-dashboard/docker-compose.yml"]
     present_value = b"a"
     compose_rows = {
@@ -153,10 +98,7 @@ def stage01_receipt(tmp_path: Path, deploy: ModuleType) -> tuple[Path, str, dict
         target = tmp_path / key
         target.write_bytes(value)
         artifacts[key] = target
-    # Synthetic fixture: pin a deterministic release id and manifest sha256 so
-    # the receipt stays stable across releases and never reads the generated
-    # descriptor (which is intentionally removed from the public source export).
-    release_id = SYNTHETIC_RELEASE_ID
+    release_id = json.loads(RELEASE_MANIFEST.read_text())["release_id"]
     systemd_states = {
         unit: {"Id": unit, "LoadState": "not-found", "UnitFileState": "", "ActiveState": "inactive"}
         for unit in deploy.SYSTEMD_UNITS
@@ -174,7 +116,7 @@ def stage01_receipt(tmp_path: Path, deploy: ModuleType) -> tuple[Path, str, dict
         "target_endpoint": deploy.TARGET_DOCKER_HOST,
         "predecessor_container_id": "a" * 64,
         "predecessor_volume_name": "ispindel-dashboard_ispindel-data",
-        "release_manifest_sha256": SYNTHETIC_RELEASE_MANIFEST_SHA256,
+        "release_manifest_sha256": digest(RELEASE_MANIFEST),
         "predecessor_descriptor": str(PREDECESSOR),
         "predecessor_descriptor_sha256": digest(PREDECESSOR),
         "expected_missing_amendment": str(CONTRACT),
@@ -218,8 +160,8 @@ def test_stable_container_fingerprint_ignores_mount_order(deploy: ModuleType) ->
     assert deploy.stable_container_fingerprint(container) == deploy.stable_container_fingerprint(reordered)
 
 
+@requires_frozen_release
 def test_current_release_passes_strict_local_verification(deploy: ModuleType) -> None:
-    _require_release_payload()
     path, manifest = deploy.load_release(RELEASE_MANIFEST)
     assert path == RELEASE_MANIFEST
     assert manifest["release_id"] == RELEASE_ID
@@ -236,8 +178,8 @@ def test_path_guards_reject_destructive_roots_and_env_redirection(deploy: Module
     assert deploy.validate_production_env("/etc/ispindel/production.env") == "/etc/ispindel/production.env"
 
 
+@requires_release_manifest
 def test_tampered_release_descriptor_is_rejected_before_ssh(tmp_path: Path) -> None:
-    _require_release_manifest()
     manifest = json.loads(RELEASE_MANIFEST.read_text())
     manifest["release_id"] = "20260803T011203Z-000000000000"
     target = tmp_path / "RELEASE.json"
@@ -257,8 +199,8 @@ def test_tampered_release_descriptor_is_rejected_before_ssh(tmp_path: Path) -> N
     assert "ssh" not in result.stderr
 
 
+@requires_frozen_release
 def test_predecessor_descriptor_is_bound_to_release_inventory(tmp_path: Path) -> None:
-    _require_release_payload()
     altered = json.loads(PREDECESSOR.read_text())
     altered["hostname"] = "tampered"
     target = tmp_path / "predecessor.json"
@@ -351,10 +293,10 @@ def test_release_verifier_invocations_disable_bytecode_writes(deploy: ModuleType
 
 
 
+@requires_frozen_release
 def test_stage02_rehearsal_command_disables_bytecode_writes(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, deploy: ModuleType,
 ) -> None:
-    _require_release_payload()
     calls: list[tuple[str, list[str] | str]] = []
     image_id = json.loads(RELEASE_MANIFEST.read_text())["image"]["id"]
 
@@ -458,10 +400,10 @@ def test_backup_output_binds_one_verified_absolute_manifest(deploy: ModuleType) 
         deploy.parse_backup_output((json.dumps(event) + "\n").encode())
 
 
+@requires_frozen_release
 def test_stage04_receipt_preserves_inspectable_database_evidence(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, deploy: ModuleType,
 ) -> None:
-    _require_release_payload()
     class FakeRunner:
         dry_run = False
 
@@ -512,10 +454,10 @@ def test_stage04_receipt_preserves_inspectable_database_evidence(
     assert receipt["served_static_assets"] == expected_served_assets
 
 
+@requires_frozen_release
 def test_stage04_rejects_non_object_database_evidence(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, deploy: ModuleType,
 ) -> None:
-    _require_release_payload()
     class BadRunner:
         dry_run = False
 
@@ -923,7 +865,6 @@ def test_stage03_rollback_failure_is_fail_closed(tmp_path: Path) -> None:
 def test_all_five_real_dry_run_plans_are_safe_and_complete(
     tmp_path: Path, stage01_receipt: tuple[Path, str, dict[str, object]], deploy: ModuleType,
 ) -> None:
-    _require_release_manifest()
     receipt_path, receipt_sha, receipt = stage01_receipt
     release_id = str(receipt["release_id"])
     release_manifest = json.loads(RELEASE_MANIFEST.read_text())

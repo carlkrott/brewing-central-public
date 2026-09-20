@@ -102,7 +102,12 @@ jobs:
           } > runtime.sbom.meta
           cat runtime.sbom.meta
       - name: Upload SBOM + metadata
-        if: always()
+        # Validate SBOMs on every push/PR, but retain artifacts only for
+        # canonical main and release-tag pushes. This avoids consuming the
+        # account artifact quota on branch/PR qualification runs.
+        if: >-
+          always() && github.event_name == 'push' && github.event.deleted != true &&
+          (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: sbom-runtime
