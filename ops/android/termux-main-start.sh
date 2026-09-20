@@ -20,6 +20,21 @@ if command -v termux-wake-lock >/dev/null 2>&1; then
   termux-wake-lock || true
 fi
 
+# Non-fatal control-plane preflight / observation; never gates app startup.
+DISPATCHER="$ROOT/control/bin/phone-management-dispatch.py"
+if [[ -x "$DISPATCHER" ]]; then
+  if python3 "$DISPATCHER" verify >/dev/null 2>&1; then
+    printf '%s boot=sshd-preflight status=ok context=termux-main\n' \
+      "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  else
+    printf '%s boot=sshd-preflight status=degraded context=termux-main\n' \
+      "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  fi
+else
+  printf '%s boot=sshd-preflight status=skipped reason=dispatcher-missing context=termux-main\n' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+fi
+
 for attempt in $(seq 1 60); do
   if [[ -x "$ROOT/current/ops/android/start-phone-stack.sh" ]] && \
      "$ROOT/current/ops/android/start-phone-stack.sh"; then

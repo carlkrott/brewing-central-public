@@ -34,6 +34,7 @@ EVIDENCE_DIR="$ROOT/data"
 PRODUCER_REL="ops/android/write-phone-evidence.py"
 PRODUCER="$ROOT/current/${PRODUCER_REL}"
 PYTHON_BIN="${PHONE_EVIDENCE_PYTHON:-$ROOT/venv/bin/python}"
+CONTROL_PYTHON="${PHONE_SSHD_PYTHON:-$PREFIX/bin/python3}"
 
 # Source the deployed phone.env with export semantics BEFORE the producer is
 # invoked. The real Termux:Boot environment does not pre-populate
@@ -48,15 +49,30 @@ PHONE_ENV="${PHONE_ENV_FILE:-$ROOT/config/phone.env}"
 # Source once before interval calculation so the configured interval is used
 # for the loop's initial scheduling. A missing file remains a fail-closed
 # skip condition handled in the loop below; source errors are remembered and
-# explicitly skip the producer for that iteration.
+# explicitly skip the producer for that iteration. Enforce mode 0600 to
+# match sshd's StrictModes expectation so secrets are not world-readable.
 PHONE_ENV_SOURCE_FAILED=0
 if [[ -f "$PHONE_ENV" ]]; then
-  # shellcheck disable=SC1090
-  set -a
-  if ! . "$PHONE_ENV" >/dev/null 2>&1; then
-    PHONE_ENV_SOURCE_FAILED=1
+  # Mode 0600 (or stricter: 0400) is required. Refuse to source otherwise.
+  PHONE_ENV_MODE="$(stat -c '%a' "$PHONE_ENV" 2>/dev/null || stat -f '%Lp' "$PHONE_ENV" 2>/dev/null || echo unknown)"
+  case "$PHONE_ENV_MODE" in
+    600|400)
+      : # acceptable
+      ;;
+    *)
+      printf '%s loop=phone-env-mode-bad path=%s mode=%s expected=0600\n' \
+        "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$PHONE_ENV" "$PHONE_ENV_MODE" >&2
+      PHONE_ENV_SOURCE_FAILED=1
+      ;;
+  esac
+  if (( PHONE_ENV_SOURCE_FAILED == 0 )); then
+    # shellcheck disable=SC1090
+    set -a
+    if ! . "$PHONE_ENV" >/dev/null 2>&1; then
+      PHONE_ENV_SOURCE_FAILED=1
+    fi
+    set +a
   fi
-  set +a
 else
   PHONE_ENV_SOURCE_FAILED=1
 fi
@@ -132,6 +148,17 @@ while true; do
     sleep "$INTERVAL" 9>&-
     continue
   fi
+  # Re-check mode 0600 on every iteration in case it has been changed.
+  PHONE_ENV_MODE="$(stat -c '%a' "$PHONE_ENV" 2>/dev/null || stat -f '%Lp' "$PHONE_ENV" 2>/dev/null || echo unknown)"
+  case "$PHONE_ENV_MODE" in
+    600|400) : ;;
+    *)
+      printf '%s loop=phone-env-mode-bad path=%s mode=%s expected=0600\n' \
+        "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$PHONE_ENV" "$PHONE_ENV_MODE" >&2
+      sleep "$INTERVAL" 9>&-
+      continue
+      ;;
+  esac
   # shellcheck disable=SC1090
   set -a
   if ! . "$PHONE_ENV" >/dev/null 2>&1; then
@@ -143,6 +170,75 @@ while true; do
   fi
   set +a
   "$PYTHON_BIN" "$PRODUCER" 9>&- || true
+
+  # Collect redacted control-plane evidence from command-bound PID/port probes only.
+  # Never logs or writes usernames, fingerprints, key paths, or config contents.
+  CONTROL_DISPATCH="$ROOT/control/bin/phone-management-dispatch.py"
+  if [[ -x "$CONTROL_DISPATCH" && -x "$PYTHON_BIN" ]]; then
+    ctrl_json="$("$PYTHON_BIN" "$CONTROL_DISPATCH" health 9>&- 2>/dev/null || true)"
+    if [[ -n "$ctrl_json" ]]; then
+      printf '%s\n' "$ctrl_json" >"$EVIDENCE_DIR/control-plane-health.json.tmp" 2>/dev/null && \
+        mv -f "$EVIDENCE_DIR/control-plane-health.json.tmp" "$EVIDENCE_DIR/control-plane-health.json" 2>/dev/null || true
+    fi
+  else
+    port_up=false
+    SSHD_PORT="${PHONE_SSHD_PORT:-8022}"
+    SSHD_BIND_IP="${PHONE_SSHD_BIND_IP:-auto}"
+    if [[ -x "$CONTROL_PYTHON" ]] && "$CONTROL_PYTHON" - "$SSHD_BIND_IP" "$SSHD_PORT" <<'PY'
+import ipaddress
+import socket
+import sys
+
+try:
+    bind_value = sys.argv[1]
+    port = int(sys.argv[2])
+    if bind_value in ("", "auto"):
+        target = ipaddress.ip_address(".".join(("100", "64", "0", "1")))
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as route_probe:
+            route_probe.settimeout(2)
+            route_probe.connect((str(target), 9))
+            bind_value = route_probe.getsockname()[0]
+    bind = ipaddress.ip_address(bind_value)
+    if bind.version != 4 or not (bind.packed[0] == 100 and 64 <= bind.packed[1] <= 127):
+        raise ValueError("non-tailnet bind")
+    if not 1 <= port <= 65535:
+        raise ValueError("invalid port")
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as readiness:
+        readiness.settimeout(2)
+        raise SystemExit(readiness.connect_ex((str(bind), port)) != 0)
+except (OSError, ValueError, IndexError):
+    raise SystemExit(1)
+PY
+    then
+      port_up=true
+    fi
+    sshd_up=false
+    SSHD_BIN="${PHONE_SSHD_BIN:-/data/data/com.termux/files/usr/bin/sshd}"
+    for c_pid_file in "$RUN_DIR"/phone-sshd*.pid; do
+      [[ -f "$c_pid_file" ]] || continue
+      c_pid="$(tr -d '[:space:]' <"$c_pid_file" 2>/dev/null || true)"
+      [[ "$c_pid" =~ ^[0-9]+$ ]] || continue
+      [[ "$c_pid" == "$$" ]] && continue
+      c_first=""
+      if [[ -r "/proc/$c_pid/cmdline" ]]; then
+        IFS= read -r -d '' c_first <"/proc/$c_pid/cmdline" 2>/dev/null || true
+      fi
+      if [[ "$c_first" == "$SSHD_BIN" ]]; then
+        if kill -0 "$c_pid" 2>/dev/null; then
+          sshd_up=true
+          break
+        fi
+      fi
+    done
+    sshd_port_json=null
+    if [[ "$SSHD_PORT" =~ ^[1-9][0-9]{0,4}$ ]] && (( SSHD_PORT <= 65535 )); then
+      sshd_port_json="$SSHD_PORT"
+    fi
+    cat <<JSON >"$EVIDENCE_DIR/control-plane-health.json.tmp" 2>/dev/null && mv -f "$EVIDENCE_DIR/control-plane-health.json.tmp" "$EVIDENCE_DIR/control-plane-health.json" 2>/dev/null || true
+{"checks":{"port_8022_listening":$port_up,"port_listening":$port_up,"sshd_port":$sshd_port_json,"sshd_alive":$sshd_up},"ts":$(date +%s)}
+JSON
+  fi
+
   # Child processes must not inherit the singleton lock. Otherwise an
   # interrupted loop leaves its sleep process holding FD 9 until the full
   # interval expires, and an immediate restart exits as already-running.

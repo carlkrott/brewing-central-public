@@ -3,7 +3,7 @@
 
 The coordinator is invoked from the dedicated phone-backup systemd unit
 ``ops/systemd/ispindel-phone-backup.service`` (new unit; the legacy
-``ops/systemd/ispindel-backup.service`` is NEVER touched by
+deployment-host ``ops/systemd/ispindel-backup.service`` is NEVER touched by
 this slice).
 
 It owns the cross-machine protocol that:

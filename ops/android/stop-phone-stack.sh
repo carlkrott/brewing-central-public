@@ -6,17 +6,16 @@ export PREFIX=/data/data/com.termux/files/usr
 export PATH="$PREFIX/bin:/system/bin"
 ROOT="$HOME/brewing-central"
 
-"$PREFIX/bin/python" - "$ROOT" <<'PY'
+"$PREFIX/bin/python" - <<'PY'
 import os
 import pathlib
 import signal
-import sys
 import time
 
-root = pathlib.Path(sys.argv[1])
+root = pathlib.Path("/data/data/com.termux/files/home/brewing-central")
 services = (
-    ("camera-observer", f"{root}/venv/bin/python -m app.camera_observer"),
-    ("dashboard", f"{root}/venv/bin/python -m uvicorn app.main:app"),
+    ("camera-observer", "/data/data/com.termux/files/home/brewing-central/venv/bin/python -m app.camera_observer"),
+    ("dashboard", "/data/data/com.termux/files/home/brewing-central/venv/bin/python -m uvicorn app.main:app"),
     ("zeroclaw", "/data/data/com.termux/files/home/bin/zeroclaw gateway"),
 )
 uid = str(os.geteuid())

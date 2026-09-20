@@ -1,9 +1,9 @@
 # Brewing Central — iSpindel Dashboard
 
-[![CI](https://github.com/carlkrott/ispindel-dashboard-public/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/carlkrott/ispindel-dashboard-public/actions/workflows/ci.yml)
-[![Security](https://github.com/carlkrott/ispindel-dashboard-public/actions/workflows/security.yml/badge.svg?branch=main)](https://github.com/carlkrott/ispindel-dashboard-public/actions/workflows/security.yml)
-[![Container](https://github.com/carlkrott/ispindel-dashboard-public/actions/workflows/container.yml/badge.svg?branch=main)](https://github.com/carlkrott/ispindel-dashboard-public/actions/workflows/container.yml)
-[![CodeQL](https://github.com/carlkrott/ispindel-dashboard-public/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/carlkrott/ispindel-dashboard-public/actions/workflows/codeql.yml)
+[![CI](https://github.com/carlkrott/brewing-central-public/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/carlkrott/brewing-central-public/actions/workflows/ci.yml)
+[![Security](https://github.com/carlkrott/brewing-central-public/actions/workflows/security.yml/badge.svg?branch=main)](https://github.com/carlkrott/brewing-central-public/actions/workflows/security.yml)
+[![Container](https://github.com/carlkrott/brewing-central-public/actions/workflows/container.yml/badge.svg?branch=main)](https://github.com/carlkrott/brewing-central-public/actions/workflows/container.yml)
+[![CodeQL](https://github.com/carlkrott/brewing-central-public/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/carlkrott/brewing-central-public/actions/workflows/codeql.yml)
 
 Brewing Central is a self-hosted, browser-first workspace for **iSpindel
 fermentation telemetry**, recipes, brew records, and local operator guidance.
@@ -105,8 +105,8 @@ SQLite files under the local `data/` directory and deliberately does not
 require production token or private-network configuration.
 
 ```bash
-git clone https://github.com/carlkrott/ispindel-dashboard-public.git
-cd ispindel-dashboard-public
+git clone https://github.com/carlkrott/brewing-central-public.git
+cd brewing-central-public
 
 python3.12 -m venv .venv
 source .venv/bin/activate

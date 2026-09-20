@@ -130,8 +130,8 @@ checks the review file.
 - **Two reviewers** sign the Phase 7B freeze and the release manifest.
 - **Exact hashes** bind the review to the artifact.
 - **Production is a single private local service.** The only host that
-  matters is the operator-owned production host, and the operator
-  personally knows what builds are on it.
+  matters is the deployment host, and the operator personally knows what builds
+  are on it.
 
 The dual-review guarantee is real for the freeze evidence; the
 cross-host guarantee is not, because all reviews happen on the same
@@ -142,7 +142,7 @@ operator-owned filesystem.
 Re-open Slice E if any of the following becomes true:
 
 - **External distribution** of the dashboard or its image beyond the local
-  operator-owned production host.
+  deployment host.
 - **Regulated use** (e.g., medical, industrial, or compliance-mandated
   deployment) where a single-host review is not acceptable.
 - **Multi-host promotion** (e.g., promoting the same release to a second
@@ -157,20 +157,18 @@ Until then, the dual-review plus exact-hash release is sufficient.
 For the avoidance of doubt, the following concerns are **not** deferred.
 They are part of the baseline release:
 
-- **Auth and TLS on the tailnet UI.** The auth-and-TLS track delivers
-  HTTP Basic Auth and Caddy `tls internal` for the tailnet listener.
-- **Path/method boundary on the LAN.** The LAN boundary track delivers
-  the Caddy LAN listener that allows only `POST /api/ingest`.
-- **Verified backup and isolated restore rehearsal.** The verified-backup
-  track delivers the backup algorithm, off-host copy, and monthly restore drill.
-- **Deterministic health evidence and alerts.** The health-evidence track
-  delivers the canonical `send-alert.sh`, the atomic writer, and the
-  journald event contract.
-- **Exact predecessor application rollback.** The five-stage deployment
-  and rollback entry point deliver exact predecessor application rollback,
-  with `Stage 05` as the rollback entry point.
-- **Phase 7B freeze repair.** The freeze-repair track reconstructs the
-  reviewed freeze mechanically and binds it to a new authority JSON.
+- **Auth and TLS on the tailnet UI.** T4 and T5 deliver HTTP Basic Auth
+  and Caddy `tls internal` for the tailnet listener.
+- **Path/method boundary on the LAN.** T5 delivers the Caddy LAN listener
+  that allows only `POST /api/ingest`.
+- **Verified backup and isolated restore rehearsal.** T7 delivers the
+  backup algorithm, off-host copy, and monthly restore drill.
+- **Deterministic health evidence and alerts.** T6 delivers the canonical
+  `send-alert.sh`, the atomic writer, and the journald event contract.
+- **Exact predecessor application rollback.** T9 + T11 deliver the
+  five-stage deployment with `Stage 05` as the rollback entry point.
+- **Phase 7B freeze repair.** T2 reconstructs the reviewed freeze
+  mechanically and binds it to a new authority JSON.
 
 The deferred slices are **above** that baseline.
 
