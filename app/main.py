@@ -2277,7 +2277,10 @@ def parse_battery_evidence(path: Path, *, now: datetime | None = None,
     try:
         raw = json.loads(path.read_text())
     except (OSError, json.JSONDecodeError) as exc:
-        return _evidence("parse_error", ttl_seconds, now=now, detail=f"invalid battery evidence: {exc}")
+        return _evidence(
+            "parse_error", ttl_seconds, now=now,
+            detail=f"invalid battery evidence: {type(exc).__name__}",
+        )
     if not isinstance(raw, dict):
         return _evidence("parse_error", ttl_seconds, now=now, detail="battery evidence must be an object", raw=raw)
     if raw.get("schema_version") != "health-evidence-v1" or raw.get("kind") != "battery":
@@ -2320,7 +2323,10 @@ def parse_heartbeat_evidence(path: Path, *, now: datetime | None = None,
     try:
         raw = json.loads(path.read_text())
     except (OSError, json.JSONDecodeError) as exc:
-        return _evidence("parse_error", ttl_seconds, now=now, detail=f"invalid heartbeat evidence: {exc}")
+        return _evidence(
+            "parse_error", ttl_seconds, now=now,
+            detail=f"invalid heartbeat evidence: {type(exc).__name__}",
+        )
     if not isinstance(raw, dict):
         return _evidence("parse_error", ttl_seconds, now=now,
                          detail="heartbeat evidence must be an object", raw=raw)
