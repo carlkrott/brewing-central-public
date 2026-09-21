@@ -7,12 +7,13 @@ import json
 import os
 from pathlib import Path
 import re
+import shlex
 import shutil
 import stat
 import subprocess
 import sys
 from types import ModuleType
-from typing import cast
+from typing import Any, cast
 
 import pytest
 
@@ -259,7 +260,7 @@ def test_dry_runner_never_opens_ssh(deploy: ModuleType) -> None:
     assert "cd /srv/ispindel && docker compose ps" in runner.plan[0][-1]
 
 
-def test_dry_runner_redacts_secret_paths_only_in_rendered_plan(
+def test_dry_runner_emits_bounded_summary_without_rendering_argv(
     deploy: ModuleType, capsys: pytest.CaptureFixture[str]
 ) -> None:
     runner = deploy.Runner(dry_run=True)
@@ -271,9 +272,11 @@ def test_dry_runner_redacts_secret_paths_only_in_rendered_plan(
     runner.emit_plan("preflight", "20260921T000000Z-aaaaaaaaaaaa")
 
     rendered = capsys.readouterr().out
+    payload = json.loads(rendered)
     assert "/etc/ispindel/secrets" not in rendered
     assert "ingest-tokens.json" not in rendered
-    assert "[REDACTED_SECRET_PATH]" in rendered
+    assert "root:root" not in rendered
+    assert payload["commands"] == [{"program": "sudo", "argv_count": 4}]
     assert runner.plan == [command]
 
 
@@ -882,6 +885,7 @@ def test_stage03_rollback_failure_is_fail_closed(tmp_path: Path) -> None:
 
 def test_all_five_real_dry_run_plans_are_safe_and_complete(
     tmp_path: Path, stage01_receipt: tuple[Path, str, dict[str, object]], deploy: ModuleType,
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
 ) -> None:
     receipt_path, receipt_sha, receipt = stage01_receipt
     release_id = str(receipt["release_id"])
@@ -931,24 +935,41 @@ def test_all_five_real_dry_run_plans_are_safe_and_complete(
         [str(wrappers / "05-rollback-application.sh"), *common, "--stage01-receipt", str(receipt_path),
          "--stage01-receipt-sha256", receipt_sha],
     ]
+    real_runner = deploy.Runner
+    runners: list[Any] = []
+
+    class CapturingRunner(real_runner):  # type: ignore[misc, valid-type]
+        def __init__(self, dry_run: bool) -> None:
+            super().__init__(dry_run)
+            runners.append(self)
+
+    monkeypatch.setattr(deploy, "Runner", CapturingRunner)
     plans: list[dict[str, object]] = []
+    executable_plans: list[list[list[str]]] = []
     for index, command in enumerate(commands, start=1):
-        result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, check=False)
-        assert result.returncode == 0, result.stderr
-        plan = json.loads(result.stdout)
+        result = deploy.main([f"stage-0{index}", *command[1:]])
+        captured = capsys.readouterr()
+        assert result == 0, captured.err
+        plan = json.loads(captured.out)
         assert plan["stage"].startswith(f"0{index}-")
         assert plan["release_id"] == release_id
         assert plan["commands"]
-        for remote in cast(list[str], plan["commands"]):
-            assert remote.startswith("ssh ")
-            assert "/bin/bash -lc" in remote
-            assert "cd /opt/ispindel-dashboard &&" in remote
+        for summary in cast(list[dict[str, object]], plan["commands"]):
+            assert summary["program"] == "ssh"
+            assert isinstance(summary["argv_count"], int)
+            assert summary["argv_count"] > 0
         plans.append(plan)
-    stage01 = "\n".join(cast(list[str], plans[0]["commands"]))
-    stage02 = "\n".join(cast(list[str], plans[1]["commands"]))
-    stage03 = "\n".join(cast(list[str], plans[2]["commands"]))
-    stage04 = "\n".join(cast(list[str], plans[3]["commands"]))
-    stage05 = "\n".join(cast(list[str], plans[4]["commands"]))
+        executable_plans.append(cast(list[list[str]], runners[-1].plan))
+    rendered = json.dumps(plans, sort_keys=True)
+    assert "/etc/ispindel/secrets" not in rendered
+    assert "ingest-tokens.json" not in rendered
+    assert "user@example" not in rendered
+    assert "/opt/ispindel-dashboard" not in rendered
+    stage01 = "\n".join(shlex.join(row) for row in executable_plans[0])
+    stage02 = "\n".join(shlex.join(row) for row in executable_plans[1])
+    stage03 = "\n".join(shlex.join(row) for row in executable_plans[2])
+    stage04 = "\n".join(shlex.join(row) for row in executable_plans[3])
+    stage05 = "\n".join(shlex.join(row) for row in executable_plans[4])
     assert "tar --exclude=.git --exclude=.venv --exclude=dist --exclude=evidence --exclude=__pycache__ -cf - ." in stage01
     assert f"docker --host {deploy.TARGET_DOCKER_HOST} run --rm --network none --pull never" in stage02
     assert f"DOCKER_HOST={deploy.TARGET_DOCKER_HOST}" in stage02
