@@ -677,8 +677,16 @@ class Runner:
         return self.remote_script(host, remote_root, prefixed, required=required)
 
     def emit_plan(self, stage: str, release_id: str) -> None:
+        def redact(value: str) -> str:
+            return (
+                value
+                .replace("/etc/ispindel/secrets", "[REDACTED_SECRET_PATH]")
+                .replace("ingest-tokens.json", "[REDACTED_SECRET_FILE]")
+            )
+
         print(json.dumps({"event": "deployment_dry_run", "stage": stage, "release_id": release_id,
-                          "commands": [shlex.join(row) for row in self.plan]}, indent=2, sort_keys=True))
+                          "commands": [shlex.join([redact(value) for value in row]) for row in self.plan]},
+                   indent=2, sort_keys=True))
 
 
 def require_execution(args: argparse.Namespace, release_id: str) -> None:

@@ -9,6 +9,8 @@ import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import pytest
+
 
 NOW = datetime(2026, 7, 28, 12, 0, tzinfo=timezone.utc)
 
@@ -47,6 +49,28 @@ def test_battery_parser_stale_missing_parse_error(app_module, tmp_path):
     assert app_module.parse_battery_evidence(bad, now=NOW)["status"] == "parse_error"
     stale = tmp_path / "stale"; stale.write_text(json.dumps(_battery(90, "2026-07-28T11:00:00Z")))
     assert app_module.parse_battery_evidence(stale, now=NOW)["status"] == "stale"
+
+
+@pytest.mark.parametrize(
+    ("parser_name", "label"),
+    [("parse_battery_evidence", "battery"), ("parse_heartbeat_evidence", "heartbeat")],
+)
+def test_evidence_parse_error_does_not_expose_source_path(
+    app_module, tmp_path, parser_name, label
+):
+    sensitive = tmp_path / f"{label}-evidence.json"
+
+    class ExplodingPath:
+        def exists(self):
+            return True
+
+        def read_text(self):
+            raise OSError(f"permission denied: {sensitive}")
+
+    result = getattr(app_module, parser_name)(ExplodingPath(), now=NOW)
+    assert result["status"] == "parse_error"
+    assert str(sensitive) not in result["detail"]
+    assert result["detail"] == f"invalid {label} evidence: OSError"
 
 
 def test_heartbeat_parser_ok_warning_critical_and_poll_failed(app_module, tmp_path):

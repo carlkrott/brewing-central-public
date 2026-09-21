@@ -259,6 +259,24 @@ def test_dry_runner_never_opens_ssh(deploy: ModuleType) -> None:
     assert "cd /srv/ispindel && docker compose ps" in runner.plan[0][-1]
 
 
+def test_dry_runner_redacts_secret_paths_only_in_rendered_plan(
+    deploy: ModuleType, capsys: pytest.CaptureFixture[str]
+) -> None:
+    runner = deploy.Runner(dry_run=True)
+    command = [
+        "sudo", "chown", "root:root",
+        "/etc/ispindel/secrets/ingest-tokens.json",
+    ]
+    runner.run(command)
+    runner.emit_plan("preflight", "20260921T000000Z-aaaaaaaaaaaa")
+
+    rendered = capsys.readouterr().out
+    assert "/etc/ispindel/secrets" not in rendered
+    assert "ingest-tokens.json" not in rendered
+    assert "[REDACTED_SECRET_PATH]" in rendered
+    assert runner.plan == [command]
+
+
 def test_endpoint_prefix_precedes_subcommand_and_handles_env_compose(deploy: ModuleType) -> None:
     endpoint = deploy.TARGET_DOCKER_HOST
     assert deploy.prefix_endpoint(["docker", "inspect", "candidate"], endpoint) == [
