@@ -2,6 +2,6 @@
 #   uv pip compile --generate-hashes requirements-test.in -o requirements-test.lock
 -r requirements.txt
 pytest==9.1.1
-playwright==1.61.0
+playwright==1.63.0
 httpx==0.28.1
 axe-playwright-python==0.1.8
